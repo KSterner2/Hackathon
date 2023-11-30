@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="style.css">
+  <title>Forum for Issues</title>
+</head>
+<body>
+
+  <!-- Dropdown to select a category -->
+  <select id="categorySelect" onchange="filterPosts()">
+    <option value="Issues">Issues</option>
+    <option value="Information">Information</option>
+    <option value="Food">Food</option>
+  </select>
+
+  <!-- Dropdown to select a community -->
+  <select id="communitySelect" onchange="filterPosts()">
+    <option value="Community1">Community1</option>
+    <option value="Community2">Community2</option>
+  </select>
+
+  <!-- HTML form for submitting a post -->
+  <form id="postForm">
+    <input type="text" id="postTitle" placeholder="Title">
+    <textarea id="postContent" placeholder="Content"></textarea>
+    <button type="submit">Submit Post</button>
+  </form>
+
+  <!-- Main container for all posts -->
+  <div id="mainContainer"></div>
+
+  <script>
+    // Database URL
+    const firebaseDatabaseURL = "https://msuduhackton.firebaseio.com/";
+    
+    // Add your auth token here
+    const authToken = 'Qo48kLx2pbVoBJOC6dJhslRm35319dam4oOPwfwg';
+
+    // Event Listener for form submission
+    document.getElementById('postForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      // Extract form field values
+      const title = document.getElementById('postTitle').value;
+      const content = document.getElementById('postContent').value;
+      const category = document.getElementById('categorySelect').value;
+      const community = document.getElementById('communitySelect').value;
+
+      // Create a new post object
+      const newPost = {
+        title: title,
+        content: content,
+        upvotes: 0
+      };
+
+      // Firebase endpoint for storing posts
+      const postUrl = `${firebaseDatabaseURL}/posts/${category}/${community}.json?auth=${authToken}`;
+      // Perform a POST request to Firebase
+      fetch(postUrl, {
+        method: 'POST',
+        body: JSON.stringify(newPost)
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log('Success:', data);
+        // Clear form fields
+        document.getElementById('postTitle').value = '';
+        document.getElementById('postContent').value = '';
+        // Refresh posts
+        filterPosts();
+      })
+      .catch((error) => {
+        console.error('Error:', error);
+      });
+    });
+    filterPosts();
+    // Function to filter and display posts
+    function filterPosts() {
+      const category = document.getElementById('categorySelect').value;
+      const community = document.getElementById('communitySelect').value;
+      const fetchUrl = `${firebaseDatabaseURL}/posts/${category}/${community}.json?auth=${authToken}`;
+      
+      fetch(fetchUrl)
+      .then(response => response.json())
+      .then(data => updatePosts(data));
+    }
+    
+    // Function to display posts
+    function updatePosts(posts) {
+      const container = document.getElementById('mainContainer');
+      container.innerHTML = '';
+      for (const postId in posts) {
+        const post = posts[postId];
+        const postDiv = document.createElement('div');
+        postDiv.className = 'post';
+        postDiv.innerText = `Title: ${post.title}, Content: ${post.content}, Upvotes: ${post.upvotes}`;
+        container.appendChild(postDiv);
+      }
+    } 
+  </script>
+</body>
+</html>
+
+
